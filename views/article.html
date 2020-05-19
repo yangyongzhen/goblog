@@ -168,7 +168,7 @@
 			<h2>最新文章</h2>
 			<ol>
 			  {{range $i,$v := .newart}}
-			  <li><span><strong>{{$i}}</strong></span><a href="/article/{{$v.ID}}">{{$v.Title}}</a></li>
+			  <li><span><strong>{{add $i 1}}</strong></span><a href="/article/{{$v.ID}}">{{$v.Title}}</a></li>
 			  {{end}}
 			</ol>
 		</div>

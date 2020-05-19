@@ -129,8 +129,8 @@ func RefreshData() {
 	NewArts = NewPosts
 	num := len(NewPosts)
 	if num > 9 {
-		NewArts = NewPosts[num-9 : num]
-		HotArts = HotArts[num-9 : num]
+		NewArts = NewPosts[0:9]
+		HotArts = HotArts[0:9]
 	}
 	conf.Art.Save()
 	conf.Stat.Save()
@@ -209,7 +209,25 @@ func getPosts() []Post {
 
 		id := md5Str(file)
 		articlesMap[id] = f
-		for j := 0; j < len(conf.Item.Items); j++ {
+		itemcount := len(conf.Item.Items)
+		//查找分类看是否已存在
+		if itemcount == 0 {
+			conf.Item.Items = append(conf.Item.Items, item)
+		} else {
+			k := 0
+			for k = 0; k < itemcount; k++ {
+				if conf.Item.Items[k] == item {
+					break
+				}
+			}
+			if k >= itemcount {
+				//分类之前未存在，添加分类
+				conf.Item.Items = append(conf.Item.Items, item)
+				itemcount = len(conf.Item.Items)
+			}
+		}
+
+		for j := 0; j < itemcount; j++ {
 			if conf.Item.Items[j] == item {
 				art := conf.Articles{id, item, title, date, summary, file, imgfile, author, 0, 0}
 				if conf.Art.ArticlesMap[item] == nil {
@@ -226,6 +244,7 @@ func getPosts() []Post {
 		a = append(a, Post{id, title, date, summary, body, file, imgfile, item, author, nil, conf.Art.ArticlesMap[item][id].CmtCnt, conf.Art.ArticlesMap[item][id].VistCnt})
 	}
 	conf.Art.Save()
+	conf.Item.Save()
 	fmt.Printf("%#v\n", conf.Art.ArticlesMap)
 	fmt.Printf("%#v\n", articlesMap)
 	return a
@@ -374,14 +393,15 @@ func main() {
 	conf.Abt.Email = "534117529@qq.com"
 	conf.Abt.Save()
 	//分类
-	conf.Item.Items = append(conf.Item.Items, "随笔")
-	conf.Item.Items = append(conf.Item.Items, "感悟")
-	conf.Item.Items = append(conf.Item.Items, "学习")
-	conf.Item.Items = append(conf.Item.Items, "笔记")
-	conf.Item.Items = append(conf.Item.Items, "兴趣")
-	conf.Item.Items = append(conf.Item.Items, "爱好")
-	fmt.Printf("%d\n", len(conf.Item.Items))
-	conf.Item.Save()
+	// conf.Item.Items = append(conf.Item.Items, "随笔")
+	// conf.Item.Items = append(conf.Item.Items, "感悟")
+	// conf.Item.Items = append(conf.Item.Items, "学习")
+	// conf.Item.Items = append(conf.Item.Items, "笔记")
+	// conf.Item.Items = append(conf.Item.Items, "兴趣")
+	// conf.Item.Items = append(conf.Item.Items, "爱好")
+	// fmt.Printf("%d\n", len(conf.Item.Items))
+	//加载分类
+	conf.Item.Load()
 
 	//加载评论
 	conf.Cmt.Load()
