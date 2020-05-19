@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"goblog/conf"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
@@ -41,8 +42,6 @@ type Notice struct {
 }
 
 var articlesMap map[string]string /*创建集合 */
-
-var articleIndex []Post
 
 // NewArticles 最新文章按日期排序
 type NewArticles []conf.Articles
@@ -133,11 +132,47 @@ func RefreshData() {
 		NewArts = NewPosts[num-9 : num]
 		HotArts = HotArts[num-9 : num]
 	}
+	conf.Art.Save()
+	conf.Stat.Save()
 }
 
 func handleIndex(c *gin.Context) {
 	fmt.Printf("%#v\n", NewPosts)
-	c.HTML(http.StatusOK, "index.html", gin.H{"post": NewPosts, "items": conf.Item.Items, "about": conf.Abt, "newcmts": NewCmts, "newart": NewArts, "hotart": HotArts})
+	spage := c.DefaultQuery("page", "1")
+	fmt.Printf("cur page:%s\n", spage)
+	page, _ := strconv.Atoi(spage)
+	nums := len(NewPosts)
+	allpage := nums / 5
+	if nums%5 != 0 {
+		allpage = nums/5 + 1
+	}
+	fmt.Printf("all page num:%d\n", allpage)
+	posts := NewPosts
+	if (page * 5) < nums {
+		posts = NewPosts[(page-1)*5 : page*5]
+	} else {
+		posts = NewPosts[(page-1)*5 : nums]
+	}
+	tabs := make([]int, allpage+2) //分页表
+	if (page - 1) == 0 {
+		tabs[0] = 1
+	} else {
+		tabs[0] = page - 1
+	}
+	for i := 1; i <= allpage; i++ {
+		tabs[i] = i
+	}
+	if page+1 <= allpage {
+		tabs[allpage+1] = page + 1
+	} else {
+		tabs[allpage+1] = 1
+	}
+	fmt.Printf("tabs:%#v\n", tabs)
+	conf.Stat.ToCnt++
+	ip := c.ClientIP()
+	fmt.Printf("client ip:%s\n", ip)
+	conf.Stat.IPs = append(conf.Stat.IPs, ip)
+	c.HTML(http.StatusOK, "index.html", gin.H{"post": posts, "items": conf.Item.Items, "about": conf.Abt, "newcmts": NewCmts, "newart": NewArts, "hotart": HotArts, "vistcnt": conf.Stat.ToCnt, "curpage": page, "tabs": tabs})
 }
 
 // strTrip 去除字符串的空格和换行
@@ -188,17 +223,6 @@ func getPosts() []Post {
 			}
 		}
 
-		//每篇文章评论的数量统计
-		// count := 0 //评论数量
-		// for _, v := range conf.Cmt.Comts {
-		// 	//fmt.Printf("%#v\n", c)
-		// 	if v.ID == id {
-		// 		count++
-		// 	}
-		// }
-		//body = "# aaaaaa"
-		//body = string(blackfriday.MarkdownCommon([]byte(body)))
-		//fmt.Println(body)
 		a = append(a, Post{id, title, date, summary, body, file, imgfile, item, author, nil, conf.Art.ArticlesMap[item][id].CmtCnt, conf.Art.ArticlesMap[item][id].VistCnt})
 	}
 	conf.Art.Save()
@@ -238,12 +262,11 @@ func handleArticles(c *gin.Context) {
 	art := conf.Art.ArticlesMap[item][id]
 	art.VistCnt++ //浏览数量加一
 	conf.Art.ArticlesMap[item][id] = art
-	conf.Art.Save()
 
 	go RefreshData()
 
 	p := Post{id, title, date, summary, body, file, imgfile, item, author, cmts, conf.Art.ArticlesMap[item][id].CmtCnt, conf.Art.ArticlesMap[item][id].VistCnt}
-	c.HTML(http.StatusOK, "article.html", gin.H{"post": p, "items": conf.Item.Items, "cmtcounts": count, "newcmts": NewCmts, "newart": NewArts, "hotart": HotArts})
+	c.HTML(http.StatusOK, "article.html", gin.H{"post": p, "items": conf.Item.Items, "cmtcounts": count, "newcmts": NewCmts, "newart": NewArts, "hotart": HotArts, "vistcnt": conf.Stat.ToCnt})
 }
 
 func handleItems(c *gin.Context) {
@@ -251,7 +274,7 @@ func handleItems(c *gin.Context) {
 	id, _ := strconv.Atoi(sid)
 	post := conf.Art.ArticlesMap[conf.Item.Items[id]]
 	fmt.Printf("%#v\n", post)
-	c.HTML(http.StatusOK, "items.html", gin.H{"post": post, "items": conf.Item.Items, "newcmts": NewCmts, "newart": NewArts, "hotart": HotArts})
+	c.HTML(http.StatusOK, "items.html", gin.H{"post": post, "items": conf.Item.Items, "newcmts": NewCmts, "newart": NewArts, "hotart": HotArts, "vistcnt": conf.Stat.ToCnt})
 }
 
 func handlePostComment(c *gin.Context) {
@@ -282,14 +305,30 @@ func handlePostComment(c *gin.Context) {
 	fmt.Printf("%#v\n", cmt)
 	conf.Cmt.Comts = append(conf.Cmt.Comts, cmt)
 	conf.Cmt.Save()
-	conf.Art.Save()
+	//conf.Art.Save()
 
 	go RefreshData()
 
 	c.HTML(http.StatusOK, "success.html", gin.H{"notice": notice})
 }
+
+// Add ...模板里使用加
+func Add(a, b int) int {
+	return a + b
+}
+
+// Dec ...模板里使用减
+func Dec(a, b int) int {
+	return a - b
+}
 func main() {
 	router := gin.Default()
+
+	//增加个模板自定义函数Add
+	router.SetFuncMap(template.FuncMap{
+		"add": Add,
+		"dec": Dec,
+	})
 
 	//关于
 	conf.Abt.Name = "一米阳光"
@@ -313,9 +352,11 @@ func main() {
 
 	//加载文章
 	conf.Art.Load()
+	//加载统计信息
+	conf.Stat.Load()
 
 	articlesMap = make(map[string]string)
-	articleIndex = getPosts()
+	articleIndex := getPosts()
 	fmt.Printf("%#v\n", articleIndex)
 
 	//更新文章排序和浏览量

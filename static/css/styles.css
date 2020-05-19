@@ -71,6 +71,8 @@ a.iconfont.icon-weixin { color: #07AF12; background: url(../images/c04.png) no-r
 .likes, .comments { float: right; padding: 0 0 0 14px; }
 .likes { background-position: 0 -240px; }
 .comments { background-position: 0 -220px; }
+
+
 /*-------------------aside侧边栏--------------------------*/
 aside { width: 310px; float: right; margin: 20px 0; }
 aside h2, footer h2 { font-size: 16px; margin-bottom: 10px; text-shadow: #000 1px 1px 1px; color: #ccc }
@@ -134,3 +136,51 @@ footer { background: rgba(0, 0, 0, 0.44); -webkit-box-shadow: 0 -1px 0 rgba(0,0,
 .flickr ul li img:hover { opacity: 0.2 }
 .footer-bottom { background: rgba(0, 0, 0, 0.55); overflow: hidden; }
 .footer-bottom p { width: 1000px; margin: 0 auto; padding: 10px 0; }
+
+/*pagelist*/
+
+/* .pagelist { text-align: left; color: #666; width: 666px; float: left;clear: both; padding: 0 0 0 160px; }
+.pagelist a { color: #666; margin: 0 5px 10px; padding: 5px 10px; background: #F7F7F7; display: inline-block; }
+.pagelist a:nth-child(1) { background: none; margin: 0; padding: 0 50px 0 0; position: relative }
+.pagelist a:nth-child(1):after { position: absolute; content: "篇文章"; right: 0; bottom: 0 }
+.pagelist a:nth-child(1):hover { background: none; color: #666 }
+.pagelist a:hover, .pagelist > b { color: #3690cf; color: #FFF; background: #1C2327; }
+.pagelist > b { padding: 5px 10px; }
+a.curPage { color: #ffffff; font-weight: bold; background: #000; } */
+
+
+ul.pagination {
+    display: inline-block;
+    width: 666px; 
+    padding-left: 175px;
+    margin: 0;
+}
+
+ul.pagination li {display: inline;}
+
+ul.pagination li a {
+    color: black;
+    float: left;
+    padding: 8px 16px;
+    text-decoration: none;
+    transition: background-color .3s;
+    border: 1px solid #ddd8;
+}
+
+.pagination li:first-child a {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.pagination li:last-child a {
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+ul.pagination li a.active {
+    background-color: #4CAF50;
+    color: white;
+    border: 1px solid #4CAF50;
+}
+
+ul.pagination li a:hover:not(.active) {background-color: #ddd;}
