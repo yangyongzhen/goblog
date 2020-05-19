@@ -41,9 +41,9 @@
 				  <p> <a href="/article/{{.ID}}" target="_blank">{{.Summary}}</a></p>
 				</ul>
 				<ul class="details">
-				  <li class="likes"><a href="#">10</a></li>
-				  <li class="comments"><a href="#">34</a></li>
-				  <li class="icon-time"><a href="#">{{.Date}}</a></li>
+					<li class="likes"><a href="#">{{.VistCnt}}</a></li>
+					<li class="comments"><a href="#">{{.CmtCnt}}</a></li>
+					<li class="icon-time"><a href="#">{{.Date}}</a></li>
 				</ul>
 			  </div>
 			  <!--arrow_box end--> 
@@ -60,7 +60,11 @@
 		<div class="sunnav">
 			<ul>
 				{{range $i,$v := .items}}
-				<li><a href="/items/{{$i}}" title="{{$v}}">{{$v}}</a></li>
+					{{if eq $i $.curitem}}
+					<li style="background: #E7A82B;"><a href="/items/{{$i}}" title="{{$v}}">{{$v}}</a></li>
+					{{else}}
+					<li><a href="/items/{{$i}}" title="{{$v}}">{{$v}}</a></li>
+					{{end}}
 				{{end}}
 			  </ul>
 		</div>
@@ -83,6 +87,20 @@
 	  </aside>
 	</div>
 	<!--blogs end--> 
+	<ul class="pagination">
+		{{- $lenth := dec (len .tabs) 1}}
+		{{range $i,$v := .tabs}}
+		  {{if eq $i 0}}
+		  <li><a href="/items/{{$.curitem}}/?page={{$v}}">«</a></li>
+		  {{else if eq $i $.curpage}}
+		  <li><a class="active" href="/items/{{$.curitem}}/?page={{$v}}">{{$v}}</a></li>
+		  {{else if eq $i $lenth}}
+		  <li><a href="/items/{{$.curitem}}/?page={{$v}}">»</a></li>
+		  {{else}}
+		  <li><a href="/items/{{$.curitem}}/?page={{$v}}">{{$v}}</a></li>
+		  {{end}}
+		{{end}}
+	</ul>
   </div>
   <!--mainbody end-->
   {{template "footer" .}} 

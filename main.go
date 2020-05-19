@@ -272,9 +272,45 @@ func handleArticles(c *gin.Context) {
 func handleItems(c *gin.Context) {
 	sid := c.Param("id")
 	id, _ := strconv.Atoi(sid)
-	post := conf.Art.ArticlesMap[conf.Item.Items[id]]
-	fmt.Printf("%#v\n", post)
-	c.HTML(http.StatusOK, "items.html", gin.H{"post": post, "items": conf.Item.Items, "newcmts": NewCmts, "newart": NewArts, "hotart": HotArts, "vistcnt": conf.Stat.ToCnt})
+	all := conf.Art.ArticlesMap[conf.Item.Items[id]]
+	fmt.Printf("%#v\n", all)
+	posts := []conf.Articles{}
+	// 遍历 hash
+	for _, value := range all {
+		posts = append(posts, value)
+	}
+	//支持分页
+	spage := c.DefaultQuery("page", "1")
+	fmt.Printf("cur page:%s\n", spage)
+	page, _ := strconv.Atoi(spage)
+	nums := len(posts)
+	allpage := nums / 5
+	if nums%5 != 0 {
+		allpage = nums/5 + 1
+	}
+	fmt.Printf("all page num:%d\n", allpage)
+	curposts := posts
+	if (page * 5) < nums {
+		curposts = posts[(page-1)*5 : page*5]
+	} else {
+		curposts = posts[(page-1)*5 : nums]
+	}
+	tabs := make([]int, allpage+2) //分页表
+	if (page - 1) == 0 {
+		tabs[0] = 1
+	} else {
+		tabs[0] = page - 1
+	}
+	for i := 1; i <= allpage; i++ {
+		tabs[i] = i
+	}
+	if page+1 <= allpage {
+		tabs[allpage+1] = page + 1
+	} else {
+		tabs[allpage+1] = 1
+	}
+	fmt.Printf("tabs:%#v\n", tabs)
+	c.HTML(http.StatusOK, "items.html", gin.H{"post": curposts, "items": conf.Item.Items, "newcmts": NewCmts, "newart": NewArts, "hotart": HotArts, "vistcnt": conf.Stat.ToCnt, "curitem": id, "curpage": page, "tabs": tabs})
 }
 
 func handlePostComment(c *gin.Context) {

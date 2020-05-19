@@ -97,7 +97,6 @@
   <!--blogs end--> 
    <ul class="pagination">
     {{- $lenth := dec (len .tabs) 1}}
-    {{- $lenth}}
     {{range $i,$v := .tabs}}
       {{if eq $i 0}}
       <li><a href="/?page={{$v}}">«</a></li>
